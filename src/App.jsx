@@ -33,6 +33,8 @@ import EditWarehouse from "./pages/EditWarehouse";
 
 import Dashboard from "./pages/Dashboard";
 
+import CreateUser from "./pages/CreateUser";
+
 
 
 import "./App.css";
@@ -81,6 +83,10 @@ export default function App() {
 
           {/* DASHBOARD */}
           <Route path="/dashboard" element={<Dashboard />} />
+
+          {/* CREATE USER */}
+          <Route path="/create-user" element={<CreateUser />} />
+
 
           {/* LENDER */}
           <Route path="/lenders" element={<LenderMaster />} />

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Sun, Moon, User, Bell } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
     applyTheme,
     saveTheme,
@@ -11,6 +12,7 @@ import "./Header.css";
 export default function Header({ toggleSidebar }) {
     const [isDark, setIsDark] = useState(false);
     const [unreadCount] = useState(3);
+    const navigate = useNavigate(); // ✅ ADD
 
     useEffect(() => {
         const saved = getSavedTheme();
@@ -56,7 +58,10 @@ export default function Header({ toggleSidebar }) {
                         className="search-icon theme-icon"
                         alt="search"
                     />
-                    <input className="search" placeholder="Search for something" />
+                    <input
+                        className="search"
+                        placeholder="Search for something"
+                    />
                 </div>
 
                 {/* 🌗 Theme Toggle */}
@@ -80,8 +85,12 @@ export default function Header({ toggleSidebar }) {
                     )}
                 </div>
 
-                {/* 👤 Profile */}
-                <button className="profile-btn">
+                {/* 👤 PROFILE → CREATE USER */}
+                <button
+                    className="profile-btn"
+                    onClick={() => navigate("/create-user")}
+                    title="Create User"
+                >
                     <div className="icon-circle">
                         <User size={20} strokeWidth={1.8} />
                     </div>
