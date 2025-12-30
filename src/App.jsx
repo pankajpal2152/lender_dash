@@ -109,7 +109,7 @@ export default function App() {
           {/* WAREHOUSE */}
           <Route path="/warehouse" element={<WarehouseMaster />} />
           <Route path="/warehouse/create" element={<CreateWarehouse />} />
-          <Route path="/warehouse/edit/:id" element={<CreateWarehouse />} />
+          <Route path="/warehouse/edit/:id" element={<EditWarehouse />} />
           <Route path="/warehouse/view/:id" element={<WarehouseDetail />} />
 
           {/* LENDER BRANCH */}
