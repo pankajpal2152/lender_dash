@@ -5,41 +5,32 @@ export default function CreateUser() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    type: "User", // default value
-    aggregatorId: "",
-    lenderId: "",
-    fieldEngineerId: "",
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("User Data:", formData);
-    alert("User Created! Check console for data.");
-    // Here you can call your API to save user
+
+    console.log("Sign In Data:", formData);
+    alert("Signed in successfully!");
+
+    // 🔐 Later connect API here
+    // POST /auth/login or /user/login
   };
 
   return (
     <div className="create-user-container">
-      <h1>Create User</h1>
+      <h1>Sign In</h1>
+
       <form className="create-user-form" onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label> 
-            ID 
-            </label>
-          <input
-            type="text"
-            name="ID"
-            value={formData.Id}
-            onChange={handleChange}
-            placeholder="Enter ID"
-          />
-          
-        </div>
+        {/* EMAIL */}
         <div className="form-group">
           <label>Email</label>
           <input
@@ -47,11 +38,12 @@ export default function CreateUser() {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="Enter email"
+            placeholder="Enter your email"
             required
           />
         </div>
 
+        {/* PASSWORD */}
         <div className="form-group">
           <label>Password</label>
           <input
@@ -59,57 +51,12 @@ export default function CreateUser() {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder="Enter password"
+            placeholder="Enter your password"
             required
           />
         </div>
 
-        <div className="form-group">
-          <label>User Type</label>
-          <select
-            name="type"
-            value={formData.type}
-            onChange={handleChange}
-          >
-            <option value="User">User</option>
-            <option value="Admin">Admin</option>
-            <option value="FieldEngineer">Field Engineer</option>
-          </select>
-        </div>
-
-        <div className="form-group">
-          <label>Aggregator ID </label>
-          <input
-            type="text"
-            name="aggregatorId"
-            value={formData.aggregatorId}
-            onChange={handleChange}
-            placeholder="Enter Aggregator UUID"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Lender ID </label>
-          <input
-            type="text"
-            name="lenderId"
-            value={formData.lenderId}
-            onChange={handleChange}
-            placeholder="Enter Lender UUID"
-          />
-        </div>
-
-        <div className="form-group">
-          <label>Field Engineer ID </label>
-          <input
-            type="text"
-            name="fieldEngineerId"
-            value={formData.fieldEngineerId}
-            onChange={handleChange}
-            placeholder="Enter Field Engineer UUID"
-          />
-        </div>
-
+        {/* SUBMIT */}
         <button type="submit" className="submit-btn">
           Create User
         </button>
