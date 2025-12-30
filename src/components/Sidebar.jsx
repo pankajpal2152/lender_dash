@@ -6,7 +6,9 @@ import {
   Layers,        // Aggregator
   Building2,     // Lender Branch
   Wrench,        // Field Engineer
-  Warehouse      // Warehouse
+  Warehouse,     // Warehouse
+  Cpu,           // Device
+  Move           // Device Movement
 } from "lucide-react";
 import "./Sidebar.css";
 
@@ -108,6 +110,34 @@ export default function Sidebar({ isOpen, isMobile, closeSidebar }) {
             <Warehouse size={20} strokeWidth={1.8} />
           </span>
           {isOpen && <span className="nav-label">Warehouse</span>}
+        </NavLink>
+
+        {/* Device */}
+        <NavLink
+          to="/devices"
+          className={({ isActive }) =>
+            `nav-item ${isActive ? "active" : ""}`
+          }
+          onClick={handleNavClick}
+        >
+          <span className="nav-icon">
+            <Cpu size={20} strokeWidth={1.8} />
+          </span>
+          {isOpen && <span className="nav-label">Devices</span>}
+        </NavLink>
+
+        {/* Device Movement */}
+        <NavLink
+          to="/device-movement"
+          className={({ isActive }) =>
+            `nav-item ${isActive ? "active" : ""}`
+          }
+          onClick={handleNavClick}
+        >
+          <span className="nav-icon">
+            <Move size={20} strokeWidth={1.8} />
+          </span>
+          {isOpen && <span className="nav-label">Device Movement</span>}
         </NavLink>
 
         {/* Lender Branch */}

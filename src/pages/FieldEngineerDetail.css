@@ -1,8 +1,9 @@
 /* ===== PAGE WRAPPER ===== */
 .field-engineer-detail-container,
-.fe-detail-wrapper{
+.fe-detail-wrapper {
   max-width: 100%;
-  margin: 35px 100px; /* ✅ 35px top, 100px left & right */
+  margin: 35px 100px;
+  /* ✅ 35px top, 100px left & right */
 }
 
 /* ===== HEADER ===== */
@@ -10,7 +11,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px; /* ✅ space below header */
+  margin-bottom: 20px;
+  /* ✅ space below header */
 }
 
 /* ===== STATUS BADGE ===== */
@@ -29,8 +31,10 @@
 .card-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20px; /* ✅ EXACT 20px gap between all cards */
-  margin-bottom: 20px; /* ✅ spacing after grid */
+  gap: 20px;
+  /* ✅ EXACT 20px gap between all cards */
+  margin-bottom: 20px;
+  /* ✅ spacing after grid */
 }
 
 /* ===== CARD ===== */
@@ -38,7 +42,8 @@
   background: #ffffff;
   padding: 16px;
   border-radius: 8px;
-  margin-bottom: 20px; /* ✅ spacing when cards stack vertically */
+  margin-bottom: 20px;
+  /* ✅ spacing when cards stack vertically */
 }
 
 /* Full-width card */

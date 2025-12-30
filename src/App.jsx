@@ -1,41 +1,51 @@
 import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { Navigate } from "react-router-dom";
-
-
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
+import Dashboard from "./pages/Dashboard";
+import CreateUser from "./pages/CreateUser";
 
+/* LENDER */
 import LenderMaster from "./pages/LenderMaster";
 import EditLender from "./pages/EditLender";
 import AddLender from "./pages/AddLender";
 import ViewLender from "./pages/ViewLender";
 
+/* AGGREGATOR */
 import AggregatorMaster from "./pages/AggregatorMaster";
 import AddAggregator from "./pages/AddAggregator";
 import EditAggregator from "./pages/EditAggregator";
 import ViewAggregator from "./pages/ViewAggregator";
 
+/* FIELD ENGINEER */
 import FieldEngineerMaster from "./pages/FieldEngineerMaster";
 import FieldEngineerForm from "./pages/FieldEngineerForm";
 import EditFieldEngineer from "./pages/EditFieldEngineer";
 import FieldEngineerDetail from "./pages/FieldEngineerDetail";
 
+/* LENDER BRANCH */
 import LenderBranchMaster from "./pages/LenderBranchMaster";
 import EditLenderBranch from "./pages/EditLenderBranch";
 import ViewLenderBranch from "./pages/ViewLenderBranch";
 
-
+/* WAREHOUSE */
 import WarehouseMaster from "./pages/WarehouseMaster";
 import WarehouseDetail from "./pages/WarehouseDetail";
 import CreateWarehouse from "./pages/CreateWarehouse";
 import EditWarehouse from "./pages/EditWarehouse";
 
-import Dashboard from "./pages/Dashboard";
+/* DEVICE */
+import DeviceMaster from "./pages/DeviceMaster";
+import AddDevice from "./pages/AddDevice";
+import EditDevice from "./pages/EditDevice";
+import DeviceDetail from "./pages/DeviceDetail";
 
-import CreateUser from "./pages/CreateUser";
-
-
+/* ✅ DEVICE MOVEMENT */
+import DeviceMovementMaster from "./pages/DeviceMovementMaster";
+import CreateDeviceMovement from "./pages/CreateDeviceMovement";
+import ReceiveDeviceMovement from "./pages/ReceiveDeviceMovement";
+import DeviceMovementDetail from "./pages/DeviceMovementDetail";
 
 import "./App.css";
 
@@ -117,6 +127,18 @@ export default function App() {
           <Route path="/lender-branches/add" element={<EditLenderBranch />} />
           <Route path="/lender-branches/edit/:id" element={<EditLenderBranch />} />
           <Route path="/lender-branches/view/:id" element={<ViewLenderBranch />} />
+
+          {/* DEVICE */}
+          <Route path="/devices" element={<DeviceMaster />} />
+          <Route path="/devices/add" element={<AddDevice />} />
+          <Route path="/devices/edit/:id" element={<EditDevice />} />
+          <Route path="/devices/view/:id" element={<DeviceDetail />} />
+
+          {/* ✅ DEVICE MOVEMENT */}
+          <Route path="/device-movement" element={<DeviceMovementMaster />} />
+          <Route path="/device-movement/create/:deviceId" element={<CreateDeviceMovement />} />
+          <Route path="/device-movement/receive/:movementId" element={<ReceiveDeviceMovement />} />
+          <Route path="/device-movement/view/:id" element={<DeviceMovementDetail />} />
         </Routes>
 
       </div>

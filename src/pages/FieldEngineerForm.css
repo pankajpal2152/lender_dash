@@ -1,6 +1,7 @@
 .fe-card {
   background: #ffffff;
-  margin: 35px 100px 0 100px; /* ✅ top 35px, left/right 100px */
+  margin: 35px 100px 0 100px;
+  /* ✅ top 35px, left/right 100px */
 }
 
 /* =========================
@@ -66,7 +67,8 @@
    ========================= */
 .form-actions {
   display: flex;
-  justify-content: center; /* ✅ center aligned */
+  justify-content: center;
+  /* ✅ center aligned */
   gap: 16px;
   margin-top: 30px;
 }
