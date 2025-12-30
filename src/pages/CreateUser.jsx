@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { loginUser } from "../api/authApi";
 import "./CreateUser.css";
 
 export default function CreateUser() {
@@ -7,20 +8,45 @@ export default function CreateUser() {
     password: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("Sign In Data:", formData);
-    alert("Signed in successfully!");
+    // ✅ EXACT payload as Swagger
+    const payload = {
+      email: formData.email.trim(),
+      password: formData.password,
+    };
 
+    console.log("LOGIN PAYLOAD:", payload); // 🔍 debug
+
+    try {
+      setLoading(true);
+
+      const res = await loginUser(payload);
+
+      // ✅ Swagger: token is directly in data
+      const token = res.data.data;
+
+      localStorage.setItem("token", token);
+
+      alert("Login successful");
+      console.log("JWT TOKEN:", token);
+
+    } catch (err) {
+      console.error("LOGIN FAILED:", err.response?.data || err.message);
+      alert("Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -28,7 +54,6 @@ export default function CreateUser() {
       <h1>Sign In</h1>
 
       <form className="create-user-form" onSubmit={handleSubmit}>
-        {/* EMAIL */}
         <div className="form-group">
           <label>Email</label>
           <input
@@ -36,12 +61,11 @@ export default function CreateUser() {
             name="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="Enter your email"
+            placeholder="user@example.com"
             required
           />
         </div>
 
-        {/* PASSWORD */}
         <div className="form-group">
           <label>Password</label>
           <input
@@ -49,14 +73,13 @@ export default function CreateUser() {
             name="password"
             value={formData.password}
             onChange={handleChange}
-            placeholder="Enter your password"
+            placeholder="Enter password"
             required
           />
         </div>
 
-        {/* SUBMIT */}
-        <button type="submit" className="submit-btn">
-          Create User
+        <button type="submit" className="submit-btn" disabled={loading}>
+          {loading ? "Signing in..." : "Sign In"}
         </button>
       </form>
     </div>
