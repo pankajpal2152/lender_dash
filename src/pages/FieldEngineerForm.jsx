@@ -1,77 +1,278 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import LenderPageHeader from "../components/LenderPageHeader";
+import { createFieldEngineer, EMPLOYMENT_TYPES, STATUSES, ID_PROOF_TYPES, SKILL_TYPES } from "../api/fieldEngineerApi";
+import { getAggregators } from "../api/aggregatorApi";
 import "./FieldEngineerForm.css";
+
+/* =====================
+   DUMMY DATA FOR PREFILL
+   ===================== */
+const DUMMY_ENGINEER = {
+  engineerCode: "FE001",
+  engineerName: "Rajesh Kumar",
+  mobileNo: "+919876543210",
+  emailId: "rajesh.kumar@example.com",
+  aggregatorId: "",
+  branchCode: "BR001",
+  employmentType: "XCONICS",
+  state: "Delhi",
+  district: "South Delhi",
+  baseLocation: "Nehru Place, Delhi",
+  skillSet: ["GPS"],
+  assignedDeviceCount: 5,
+  status: "ACTIVE",
+  joiningDate: "2025-01-15",
+  lastWorkingDate: "",
+  idProofType: "AADHAAR",
+  idProofNumber: "123456789012",
+  currentLatitude: 28.5355,
+  currentLongitude: 77.3910,
+  locationUpdatedAt: "2025-12-30",
+  remarks: "Experienced field engineer with GPS expertise",
+};
+
+/* =====================
+   EMPTY MODEL
+   ===================== */
+const EMPTY_ENGINEER = {
+  engineerCode: "",
+  engineerName: "",
+  mobileNo: "",
+  emailId: "",
+  aggregatorId: "",
+  branchCode: "",
+  employmentType: "XCONICS",
+  state: "",
+  district: "",
+  baseLocation: "",
+  skillSet: [],
+  assignedDeviceCount: 0,
+  status: "ACTIVE",
+  joiningDate: "",
+  lastWorkingDate: "",
+  idProofType: "AADHAAR",
+  idProofNumber: "",
+  currentLatitude: 0,
+  currentLongitude: 0,
+  locationUpdatedAt: "",
+  remarks: "",
+};
 
 export default function FieldEngineerForm() {
   const navigate = useNavigate();
 
-  const [engineer, setEngineer] = useState({
-    engineerCode: "",
-    engineerName: "",
-    mobileNo: "",
-    emailId: "",
-    aggregatorId: "",
-    branchCode: "",
-    employmentType: "",
-    state: "",
-    district: "",
-    baseLocation: "",
-    skillset: "",
-    assignedDeviceCount: "",
-    engineerStatus: "",
-    joiningDate: "",
-    lastWorkingDate: "",
-    idProofType: "",
-    idProofNumber: "",
-    currentLatitude: "",
-    currentLongitude: "",
-    remarks: "",
-    pincodes: [""],
-  });
+  const [engineer, setEngineer] = useState(EMPTY_ENGINEER);
+  const [aggregators, setAggregators] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingAggregators, setLoadingAggregators] = useState(true);
+  const [error, setError] = useState(null);
 
+  /* =====================
+     FETCH AGGREGATORS
+     ===================== */
+  useEffect(() => {
+    const fetchAggregators = async () => {
+      setLoadingAggregators(true);
+      const result = await getAggregators({ limit: 1000 }); // Get all aggregators
+      
+      if (result.success) {
+        setAggregators(result.data);
+      } else {
+        console.error("Failed to fetch aggregators:", result.error);
+        setError("Failed to load aggregators");
+      }
+      
+      setLoadingAggregators(false);
+    };
+
+    fetchAggregators();
+  }, []);
+
+  /* =====================
+     FILL DUMMY DATA
+     ===================== */
+  const fillDummyData = () => {
+    // Set aggregatorId to first available aggregator if exists
+    const dummyWithAggregator = {
+      ...DUMMY_ENGINEER,
+      aggregatorId: aggregators.length > 0 ? aggregators[0].id : "",
+    };
+    setEngineer(dummyWithAggregator);
+  };
+
+  /* =====================
+     HANDLE CHANGE
+     ===================== */
   const handleChange = (e) => {
-    setEngineer({ ...engineer, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    setEngineer((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
-  const handlePincodeChange = (index, value) => {
-    const updated = [...engineer.pincodes];
-    updated[index] = value;
-    setEngineer({ ...engineer, pincodes: updated });
+  /* =====================
+     HANDLE SKILL SET CHANGE
+     ===================== */
+  const handleSkillChange = (skill) => {
+    setEngineer((prev) => {
+      const skillSet = prev.skillSet.includes(skill)
+        ? prev.skillSet.filter((s) => s !== skill)
+        : [...prev.skillSet, skill];
+      return { ...prev, skillSet };
+    });
   };
 
-  const addPincode = () => {
-    setEngineer({ ...engineer, pincodes: [...engineer.pincodes, ""] });
-  };
-
-  const handleSubmit = (e) => {
+  /* =====================
+     HANDLE SUBMIT
+     ===================== */
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Field Engineer Data:", engineer);
-    navigate("/engineers");
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Prepare payload with proper types
+      const payload = {
+        engineerCode: engineer.engineerCode,
+        engineerName: engineer.engineerName,
+        mobileNo: engineer.mobileNo,
+        emailId: engineer.emailId,
+        aggregatorId: engineer.aggregatorId,
+        branchCode: engineer.branchCode,
+        employmentType: engineer.employmentType,
+        state: engineer.state,
+        district: engineer.district,
+        baseLocation: engineer.baseLocation,
+        skillSet: engineer.skillSet,
+        assignedDeviceCount: Number(engineer.assignedDeviceCount),
+        status: engineer.status,
+        joiningDate: engineer.joiningDate,
+        lastWorkingDate: engineer.lastWorkingDate || engineer.joiningDate, // Default to joining date if empty
+        idProofType: engineer.idProofType,
+        idProofNumber: engineer.idProofNumber,
+        currentLatitude: Number(engineer.currentLatitude),
+        currentLongitude: Number(engineer.currentLongitude),
+        locationUpdatedAt: engineer.locationUpdatedAt || new Date().toISOString().split('T')[0],
+        remarks: engineer.remarks,
+      };
+
+      console.log("Creating field engineer with payload:", payload);
+
+      const result = await createFieldEngineer(payload);
+
+      if (result.success) {
+        console.log("Field engineer created successfully:", result.data);
+        alert("Field engineer created successfully!");
+        navigate("/engineers");
+      } else {
+        setError(result.error);
+        alert(`Error: ${result.error}`);
+      }
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setError("An unexpected error occurred");
+      alert("An unexpected error occurred");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="lender-form-page">
-      {/* PAGE HEADER */}
       <LenderPageHeader
         title="Field Engineer Master"
         breadcrumbLabel="Field Engineer"
       />
 
-      {/* CARD */}
       <div className="edit-lender-page">
         <div className="card fe-card full-width">
-          <h2 className="edit-lender-title">Add Field Engineer</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h2 className="edit-lender-title" style={{ margin: 0 }}>Add Field Engineer</h2>
+            <button 
+              type="button" 
+              onClick={fillDummyData}
+              style={{
+                padding: "0.5rem 1rem",
+                backgroundColor: "#6c757d",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "0.9rem"
+              }}
+            >
+              Fill Dummy Data
+            </button>
+          </div>
+
+          {error && (
+            <div style={{ 
+              padding: "1rem", 
+              marginBottom: "1rem", 
+              backgroundColor: "#f8d7da", 
+              color: "#721c24", 
+              borderRadius: "4px",
+              border: "1px solid #f5c6cb"
+            }}>
+              {error}
+            </div>
+          )}
 
           <form className="fe-form" onSubmit={handleSubmit}>
             {/* BASIC DETAILS */}
             <section>
               <h3>Basic Details</h3>
               <div className="fe-grid">
-                <input name="engineerCode" placeholder="Engineer Code" onChange={handleChange} />
-                <input name="engineerName" placeholder="Engineer Name" onChange={handleChange} />
-                <input name="mobileNo" placeholder="Mobile No" onChange={handleChange} />
-                <input name="emailId" placeholder="Email ID" onChange={handleChange} />
+                <label>
+                  Engineer Code*
+                  <input 
+                    name="engineerCode" 
+                    placeholder="Enter engineer code" 
+                    value={engineer.engineerCode}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </label>
+
+                <label>
+                  Engineer Name*
+                  <input 
+                    name="engineerName" 
+                    placeholder="Enter engineer name" 
+                    value={engineer.engineerName}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </label>
+
+                <label>
+                  Mobile No*
+                  <input 
+                    name="mobileNo" 
+                    placeholder="+91XXXXXXXXXX" 
+                    value={engineer.mobileNo}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </label>
+
+                <label>
+                  Email ID*
+                  <input 
+                    type="email"
+                    name="emailId" 
+                    placeholder="engineer@example.com" 
+                    value={engineer.emailId}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </label>
               </div>
             </section>
 
@@ -79,20 +280,64 @@ export default function FieldEngineerForm() {
             <section>
               <h3>Organization</h3>
               <div className="fe-grid">
-                <input name="aggregatorId" placeholder="Aggregator UUID" onChange={handleChange} />
-                <input name="branchCode" placeholder="Branch Code" onChange={handleChange} />
+                <label>
+                  Aggregator*
+                  <select 
+                    name="aggregatorId" 
+                    value={engineer.aggregatorId}
+                    onChange={handleChange}
+                    required
+                    disabled={loading || loadingAggregators}
+                  >
+                    <option value="">Select Aggregator</option>
+                    {aggregators.map((agg) => (
+                      <option key={agg.id} value={agg.id}>
+                        {agg.aggregatorName} ({agg.aggregatorCode})
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
-                <select name="employmentType" onChange={handleChange}>
-                  <option value="">Employment Type</option>
-                  <option value="FULL_TIME">Full Time</option>
-                  <option value="CONTRACT">Contract</option>
-                </select>
+                <label>
+                  Branch Code*
+                  <input 
+                    name="branchCode" 
+                    placeholder="Enter branch code" 
+                    value={engineer.branchCode}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </label>
 
-                <select name="engineerStatus" onChange={handleChange}>
-                  <option value="">Engineer Status</option>
-                  <option value="ACTIVE">Active</option>
-                  <option value="INACTIVE">Inactive</option>
-                </select>
+                <label>
+                  Employment Type*
+                  <select 
+                    name="employmentType" 
+                    value={engineer.employmentType}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  >
+                    <option value="XCONICS">Xconics</option>
+                    <option value="AGGREGATOR">Aggregator</option>
+                  </select>
+                </label>
+
+                <label>
+                  Status*
+                  <select 
+                    name="status" 
+                    value={engineer.status}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  >
+                    <option value="ACTIVE">Active</option>
+                    <option value="INACTIVE">Inactive</option>
+                    <option value="SUSPENDED">Suspended</option>
+                  </select>
+                </label>
               </div>
             </section>
 
@@ -100,18 +345,77 @@ export default function FieldEngineerForm() {
             <section>
               <h3>Location</h3>
               <div className="fe-grid">
-                <input name="state" placeholder="State" onChange={handleChange} />
-                <input name="district" placeholder="District" onChange={handleChange} />
-                <input name="baseLocation" placeholder="Base Location" onChange={handleChange} />
+                <label>
+                  State*
+                  <input 
+                    name="state" 
+                    placeholder="Enter state" 
+                    value={engineer.state}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </label>
+
+                <label>
+                  District*
+                  <input 
+                    name="district" 
+                    placeholder="Enter district" 
+                    value={engineer.district}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </label>
+
+                <label>
+                  Base Location*
+                  <input 
+                    name="baseLocation" 
+                    placeholder="Enter base location" 
+                    value={engineer.baseLocation}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </label>
               </div>
             </section>
 
-            {/* SKILLS */}
+            {/* SKILLS & DEVICES */}
             <section>
               <h3>Skills & Devices</h3>
+              
+              <label>Skill Set*</label>
+              <div className="skill-checkboxes" style={{ display: "flex", gap: "1rem", marginBottom: "1rem", flexWrap: "wrap" }}>
+                {Object.values(SKILL_TYPES).map((skill) => (
+                  <label key={skill} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <input
+                      type="checkbox"
+                      checked={engineer.skillSet.includes(skill)}
+                      onChange={() => handleSkillChange(skill)}
+                      disabled={loading}
+                    />
+                    {skill}
+                  </label>
+                ))}
+              </div>
+
               <div className="fe-grid">
-                <input name="skillset" placeholder="Skillset" onChange={handleChange} />
-                <input name="assignedDeviceCount" placeholder="Assigned Device Count" onChange={handleChange} />
+                <label>
+                  Assigned Device Count*
+                  <input 
+                    type="number"
+                    name="assignedDeviceCount" 
+                    placeholder="0" 
+                    value={engineer.assignedDeviceCount}
+                    onChange={handleChange}
+                    min="0"
+                    required
+                    disabled={loading}
+                  />
+                </label>
               </div>
             </section>
 
@@ -119,8 +423,28 @@ export default function FieldEngineerForm() {
             <section>
               <h3>Dates</h3>
               <div className="fe-grid">
-                <input type="date" name="joiningDate" onChange={handleChange} />
-                <input type="date" name="lastWorkingDate" onChange={handleChange} />
+                <label>
+                  Joining Date*
+                  <input 
+                    type="date" 
+                    name="joiningDate" 
+                    value={engineer.joiningDate}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </label>
+
+                <label>
+                  Last Working Date
+                  <input 
+                    type="date" 
+                    name="lastWorkingDate" 
+                    value={engineer.lastWorkingDate}
+                    onChange={handleChange}
+                    disabled={loading}
+                  />
+                </label>
               </div>
             </section>
 
@@ -128,54 +452,96 @@ export default function FieldEngineerForm() {
             <section>
               <h3>ID Proof</h3>
               <div className="fe-grid">
-                <select name="idProofType" onChange={handleChange}>
-                  <option value="">ID Proof Type</option>
-                  <option value="AADHAAR">Aadhaar</option>
-                  <option value="PAN">PAN</option>
-                </select>
+                <label>
+                  ID Proof Type*
+                  <select 
+                    name="idProofType" 
+                    value={engineer.idProofType}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  >
+                    <option value="AADHAAR">Aadhaar</option>
+                    <option value="PAN">PAN</option>
+                    <option value="DRIVING_LICENSE">Driving License</option>
+                    <option value="VOTER_ID">Voter ID</option>
+                    <option value="PASSPORT">Passport</option>
+                  </select>
+                </label>
 
-                <input name="idProofNumber" placeholder="ID Proof Number" onChange={handleChange} />
-              </div>
-            </section>
-
-            {/* LIVE LOCATION */}
-            <section>
-              <h3>Live Location</h3>
-              <div className="fe-grid">
-                <input name="currentLatitude" placeholder="Latitude" onChange={handleChange} />
-                <input name="currentLongitude" placeholder="Longitude" onChange={handleChange} />
-              </div>
-            </section>
-
-            {/* PINCODES */}
-            <section>
-              <h3>Pincodes Served</h3>
-              <div className="fe-grid">
-                {engineer.pincodes.map((pin, index) => (
-                  <input
-                    key={index}
-                    placeholder="Pincode"
-                    value={pin}
-                    onChange={(e) => handlePincodeChange(index, e.target.value)}
+                <label>
+                  ID Proof Number*
+                  <input 
+                    name="idProofNumber" 
+                    placeholder="Enter ID proof number" 
+                    value={engineer.idProofNumber}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
                   />
-                ))}
+                </label>
               </div>
+            </section>
 
-              <button type="button" className="add-btn" onClick={addPincode}>
-                + Add Pincode
-              </button>
+            {/* CURRENT LOCATION */}
+            <section>
+              <h3>Current Location</h3>
+              <div className="fe-grid">
+                <label>
+                  Latitude*
+                  <input 
+                    type="number"
+                    step="0.000001"
+                    name="currentLatitude" 
+                    placeholder="28.5355" 
+                    value={engineer.currentLatitude}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </label>
+
+                <label>
+                  Longitude*
+                  <input 
+                    type="number"
+                    step="0.000001"
+                    name="currentLongitude" 
+                    placeholder="77.3910" 
+                    value={engineer.currentLongitude}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </label>
+
+                <label>
+                  Location Updated At
+                  <input 
+                    type="date"
+                    name="locationUpdatedAt" 
+                    value={engineer.locationUpdatedAt}
+                    onChange={handleChange}
+                    disabled={loading}
+                  />
+                </label>
+              </div>
             </section>
 
             {/* REMARKS */}
             <section>
               <h3>Remarks</h3>
               <div className="fe-grid">
-                <textarea
-                  className="full-width"
-                  name="remarks"
-                  placeholder="Remarks"
-                  onChange={handleChange}
-                />
+                <label className="full-width">
+                  <textarea
+                    name="remarks"
+                    placeholder="Enter any additional remarks"
+                    value={engineer.remarks}
+                    onChange={handleChange}
+                    rows="4"
+                    disabled={loading}
+                  />
+                </label>
               </div>
             </section>
 
@@ -183,14 +549,18 @@ export default function FieldEngineerForm() {
             <div className="form-actions">
               <button
                 type="button"
-                className="add-more-btn secondary"
                 onClick={() => navigate("/engineers")}
+                disabled={loading}
               >
-                Back
+                Cancel
               </button>
 
-              <button type="submit" className="submit-btn">
-                Save Engineer
+              <button 
+                type="submit" 
+                className="primary"
+                disabled={loading || loadingAggregators}
+              >
+                {loading ? "Creating..." : "Create Field Engineer"}
               </button>
             </div>
           </form>
