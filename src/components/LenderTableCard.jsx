@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Eye, ArrowUp, ArrowDown, Trash2 } from "lucide-react";
-import { getLenders, deleteLender } from "../api/lenderApi";
+import { getLenders, updateLender, deleteLender } from "../api/lenderApi";
 import "./LenderTableCard.css";
 
 export default function LenderTableCard() {
@@ -16,6 +16,7 @@ export default function LenderTableCard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [totalPages, setTotalPages] = useState(0);
   const [deletingId, setDeletingId] = useState(null);
+  const [updatingId, setUpdatingId] = useState(null);
 
   /* =====================
      PAGINATION
@@ -63,17 +64,67 @@ export default function LenderTableCard() {
   }, [currentPage, searchTerm]);
 
   /* =====================
-     TOGGLE HANDLER
+     TOGGLE STATUS - CALLS UPDATE API
      ===================== */
-  const handleToggle = (id) => {
+  const handleToggle = async (id, currentLender) => {
+    // Optimistic update
+    const newStatus = currentLender.status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
+    
     setLenders((prev) =>
       prev.map((lender) =>
-        lender.id === id
-          ? { ...lender, status: lender.status === "ACTIVE" ? "INACTIVE" : "ACTIVE" }
-          : lender
+        lender.id === id ? { ...lender, status: newStatus } : lender
       )
     );
-    // TODO: Call API to update status on backend
+
+    setUpdatingId(id);
+
+    try {
+      // Prepare complete payload with all required fields
+      const payload = {
+        lenderCode: currentLender.lenderCode,
+        lenderName: currentLender.lenderName,
+        lenderType: currentLender.lenderType,
+        contactPersonName: currentLender.contactPersonName,
+        contactMobile: currentLender.contactMobile,
+        contactEmail: currentLender.contactEmail,
+        headOfficeAddress: currentLender.headOfficeAddress,
+        region: currentLender.region,
+        gstNumber: currentLender.gstNumber,
+        panNumber: currentLender.panNumber,
+        incorporationDate: currentLender.incorporationDate,
+        businessVerticals: currentLender.businessVerticals,
+        status: newStatus, // Only change status
+        remarks: currentLender.remarks || "",
+      };
+
+      console.log("Updating lender status:", { id, newStatus, payload });
+
+      const result = await updateLender(id, payload);
+
+      if (!result.success) {
+        // Revert on failure
+        setLenders((prev) =>
+          prev.map((lender) =>
+            lender.id === id ? { ...lender, status: currentLender.status } : lender
+          )
+        );
+        alert(`Failed to update status: ${result.error}`);
+        console.error("Update failed:", result.error);
+      } else {
+        console.log("Status updated successfully");
+      }
+    } catch (err) {
+      console.error("Error updating status:", err);
+      // Revert on error
+      setLenders((prev) =>
+        prev.map((lender) =>
+          lender.id === id ? { ...lender, status: currentLender.status } : lender
+        )
+      );
+      alert("An error occurred while updating status");
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
   /* =====================
@@ -92,7 +143,6 @@ export default function LenderTableCard() {
 
     if (result.success) {
       alert("Lender deleted successfully!");
-      // Refresh the list after deletion
       fetchLenders();
     } else {
       alert(`Error: ${result.error}`);
@@ -199,9 +249,6 @@ export default function LenderTableCard() {
         <table>
           <thead>
             <tr>
-              <th onClick={() => handleSort("id")}>
-                Lender Id <SortIcon column="id" />
-              </th>
               <th onClick={() => handleSort("lenderCode")}>
                 Lender Code <SortIcon column="lenderCode" />
               </th>
@@ -214,6 +261,7 @@ export default function LenderTableCard() {
               <th onClick={() => handleSort("region")}>
                 Region <SortIcon column="region" />
               </th>
+              <th>Contact</th>
               <th onClick={() => handleSort("status")}>
                 Status <SortIcon column="status" />
               </th>
@@ -226,27 +274,11 @@ export default function LenderTableCard() {
               // LOADING SKELETON
               [...Array(5)].map((_, index) => (
                 <tr key={index}>
-                  <td>
-                    <div className="skeleton-line" />
-                  </td>
-                  <td>
-                    <div className="skeleton-line" />
-                  </td>
-                  <td>
-                    <div className="skeleton-line" />
-                  </td>
-                  <td>
-                    <div className="skeleton-line" />
-                  </td>
-                  <td>
-                    <div className="skeleton-line" />
-                  </td>
-                  <td>
-                    <div className="skeleton-line" />
-                  </td>
-                  <td>
-                    <div className="skeleton-line" />
-                  </td>
+                  {[...Array(7)].map((_, colIndex) => (
+                    <td key={colIndex}>
+                      <div className="skeleton-line" />
+                    </td>
+                  ))}
                 </tr>
               ))
             ) : sortedData.length === 0 ? (
@@ -260,11 +292,27 @@ export default function LenderTableCard() {
               // DATA ROWS
               sortedData.map((lender) => (
                 <tr key={lender.id}>
-                  <td>{lender.id}</td>
                   <td>{lender.lenderCode}</td>
                   <td>{lender.lenderName}</td>
-                  <td>{lender.lenderType}</td>
+                  <td>
+                    <span
+                      style={{
+                        padding: "0.25rem 0.5rem",
+                        borderRadius: "4px",
+                        fontSize: "0.8rem",
+                        backgroundColor: 
+                          lender.lenderType === "NBFC" ? "#e3f2fd" : 
+                          lender.lenderType === "BANK" ? "#e8f5e9" : "#fff3e0",
+                        color: 
+                          lender.lenderType === "NBFC" ? "#1976d2" : 
+                          lender.lenderType === "BANK" ? "#2e7d32" : "#f57c00",
+                      }}
+                    >
+                      {lender.lenderType}
+                    </span>
+                  </td>
                   <td>{lender.region}</td>
+                  <td>{lender.contactMobile}</td>
 
                   {/* STATUS TOGGLE */}
                   <td>
@@ -272,10 +320,16 @@ export default function LenderTableCard() {
                       <input
                         type="checkbox"
                         checked={lender.status === "ACTIVE"}
-                        onChange={() => handleToggle(lender.id)}
+                        onChange={() => handleToggle(lender.id, lender)}
+                        disabled={updatingId === lender.id}
                       />
                       <span className="slider" />
                     </label>
+                    {updatingId === lender.id && (
+                      <span style={{ fontSize: "0.8rem", color: "#666", marginLeft: "0.5rem" }}>
+                        Updating...
+                      </span>
+                    )}
                   </td>
 
                   {/* ACTIONS: VIEW + EDIT + DELETE */}
@@ -283,11 +337,7 @@ export default function LenderTableCard() {
                     {/* VIEW */}
                     <button
                       className="icon-btn"
-                      onClick={() =>
-                        navigate(`/lenders/view/${lender.id}`, {
-                          state: lender,
-                        })
-                      }
+                      onClick={() => navigate(`/lenders/view/${lender.id}`)}
                       title="View"
                     >
                       <Eye size={16} />
@@ -308,6 +358,7 @@ export default function LenderTableCard() {
                       onClick={() => handleDelete(lender.id, lender.lenderName)}
                       disabled={deletingId === lender.id}
                       title="Delete"
+                      style={{ color: "#dc3545" }}
                     >
                       {deletingId === lender.id ? (
                         <span className="spinner-small" />
