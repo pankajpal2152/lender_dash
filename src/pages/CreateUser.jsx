@@ -21,8 +21,6 @@ export default function CreateUser() {
     console.log("Sign In Data:", formData);
     alert("Signed in successfully!");
 
-    // 🔐 Later connect API here
-    // POST /auth/login or /user/login
   };
 
   return (
