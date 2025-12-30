@@ -1,127 +1,194 @@
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { getWarehouseById } from "../api/warehouseApi";
 import WarehouseHeader from "../components/WarehouseHeader";
 import "./WarehouseDetail.css";
 
+/**
+ * Format date for display
+ */
+const formatDate = (isoDateString) => {
+  if (!isoDateString) return "N/A";
+  try {
+    const date = new Date(isoDateString);
+    if (isNaN(date.getTime())) return "N/A";
+    
+    return date.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (error) {
+    return "N/A";
+  }
+};
+
+/**
+ * Format datetime for display
+ */
+const formatDateTime = (isoDateString) => {
+  if (!isoDateString) return "N/A";
+  try {
+    const date = new Date(isoDateString);
+    if (isNaN(date.getTime())) return "N/A";
+    
+    return date.toLocaleString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    return "N/A";
+  }
+};
+
 export default function WarehouseDetail() {
   const navigate = useNavigate();
-  const { state } = useLocation();
+  const { id } = useParams();
 
-  /* =========================
-     NORMALIZED WAREHOUSE DATA
-     ========================= */
-  const warehouse = {
-    code: state?.code || "WH-001",
-    type: state?.type || "MAIN",
-    ownerType: state?.ownerType || "COMPANY",
-    aggregatorId: state?.aggregatorId || "9d2f-33ad-99ff",
-    status: state?.status ?? "ACTIVE",
-    address: state?.address || "Godrej Garden City, Ahmedabad",
-    state: state?.state || "Gujarat",
-    district: state?.district || "Ahmedabad",
-    latitude: state?.latitude || 23.0225,
-    longitude: state?.longitude || 72.5714,
-    contactPerson: state?.contactPerson || "Rahul Sharma",
-    mobile: state?.mobile || "9876543210",
-    email: state?.email || "warehouse@company.com",
-    remarks: state?.remarks || "Primary distribution center",
+  const [warehouse, setWarehouse] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    // ✅ ALWAYS AN ARRAY (FIX)
-    pincodes: Array.isArray(state?.pincodes)
-      ? state.pincodes
-      : [
-        { id: 1, pincode: "382470" },
-        { id: 2, pincode: "382475" },
-        { id: 3, pincode: "380005" },
-      ],
-  };
+  /* =====================
+     FETCH WAREHOUSE DATA
+     ===================== */
+  useEffect(() => {
+    const fetchWarehouse = async () => {
+      console.log("Fetching warehouse with ID:", id);
+      setLoading(true);
+      setError(null);
 
-  /* =========================
-     SAFE STATUS HANDLING
-     ========================= */
-  const statusClass =
-    typeof warehouse.status === "boolean"
-      ? warehouse.status
-        ? "active"
-        : "inactive"
-      : String(warehouse.status).toLowerCase();
+      try {
+        const result = await getWarehouseById(id);
+        console.log("getWarehouseById Result:", result);
 
-  const statusLabel =
-    typeof warehouse.status === "boolean"
-      ? warehouse.status
-        ? "ACTIVE"
-        : "INACTIVE"
-      : warehouse.status;
+        if (result.success && result.data) {
+          setWarehouse(result.data);
+        } else {
+          const errorMsg = result.error || "Failed to fetch warehouse data";
+          setError(errorMsg);
+          alert(`Error: ${errorMsg}`);
+        }
+      } catch (err) {
+        console.error("Exception in fetchWarehouse:", err);
+        setError("An unexpected error occurred while fetching data");
+        alert("An unexpected error occurred while fetching data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchWarehouse();
+    } else {
+      setLoading(false);
+      setError("No warehouse ID provided");
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="warehouse-page">
+        <WarehouseHeader />
+        <div className="warehouse-detail-container">
+          <div className="card">
+            <h2>Loading...</h2>
+            <div style={{ textAlign: "center", padding: "2rem" }}>
+              <div className="spinner"></div>
+              <p style={{ marginTop: "1rem", color: "#666" }}>Fetching warehouse data...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !warehouse) {
+    return (
+      <div className="warehouse-page">
+        <WarehouseHeader />
+        <div className="warehouse-detail-container">
+          <div className="card">
+            <h2>Error</h2>
+            <p style={{ padding: "2rem", textAlign: "center", color: "#721c24" }}>
+              {error || "Warehouse not found"}
+            </p>
+            <div className="actions">
+              <button onClick={() => navigate("/warehouse")}>
+                Back to List
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="warehouse-page">
-      {/* PAGE HEADER */}
       <WarehouseHeader />
 
-      {/* CONTENT */}
       <div className="warehouse-detail-container">
         {/* HEADER STRIP */}
         <div className="header">
           <div>
-            <h2>{warehouse.code}</h2>
-            <span className={`status ${statusClass}`}>
-              {statusLabel}
-            </span>
+            <h2>{warehouse.warehouseCode}</h2>
+            <p style={{ margin: "0.5rem 0 0 0", color: "#666", fontSize: "0.9rem" }}>
+              {warehouse.warehouseName}
+            </p>
+            <p style={{ margin: "0.25rem 0 0 0", color: "#999", fontSize: "0.8rem" }}>
+              ID: {warehouse.id}
+            </p>
           </div>
+          <span className={`status ${warehouse.status?.toLowerCase()}`}>
+            {warehouse.status}
+          </span>
         </div>
 
         {/* INFO CARDS */}
         <div className="card-grid">
           <div className="card">
             <h4>Warehouse Info</h4>
-            <p><b>Type:</b> {warehouse.type}</p>
+            <p><b>Type:</b> {warehouse.warehouseType}</p>
             <p><b>Owner Type:</b> {warehouse.ownerType}</p>
-            <p><b>Aggregator ID:</b> {warehouse.aggregatorId}</p>
+            <p><b>Aggregator ID:</b> {warehouse.aggregatorId || "N/A (Xconics Owned)"}</p>
           </div>
 
           <div className="card">
             <h4>Contact Info</h4>
-            <p><b>Person:</b> {warehouse.contactPerson}</p>
-            <p><b>Mobile:</b> {warehouse.mobile}</p>
-            <p><b>Email:</b> {warehouse.email}</p>
+            <p><b>Person:</b> {warehouse.contactPersonName}</p>
+            <p><b>Mobile:</b> {warehouse.contactMobile}</p>
+            <p><b>Email:</b> {warehouse.emailId}</p>
           </div>
 
           <div className="card full">
             <h4>Address</h4>
             <p>{warehouse.address}</p>
-            <p>{warehouse.district}, {warehouse.state}</p>
+            <p><b>District:</b> {warehouse.district}</p>
+            <p><b>State:</b> {warehouse.state}</p>
+            <p><b>Pincode:</b> {warehouse.pincode}</p>
             <p>
-              <b>Lat:</b> {warehouse.latitude} |{" "}
-              <b>Lng:</b> {warehouse.longitude}
+              <b>Location:</b> Lat {warehouse.latitude || 0}, Lng {warehouse.longitude || 0}
             </p>
           </div>
         </div>
 
-        {/* PINCODES */}
+        {/* TIMESTAMPS */}
         <div className="card">
-          <h4>Serviceable Pincodes</h4>
-
-          <table className="pincode-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Pincode</th>
-              </tr>
-            </thead>
-            <tbody>
-              {warehouse.pincodes.map((pin, index) => (
-                <tr key={pin.id}>
-                  <td>{index + 1}</td>
-                  <td>{pin.pincode}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <h4>Record Information</h4>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "1rem" }}>
+            <p><b>Created At:</b> {formatDateTime(warehouse.createdAt)}</p>
+            <p><b>Updated At:</b> {formatDateTime(warehouse.updatedAt)}</p>
+          </div>
         </div>
 
         {/* REMARKS */}
         <div className="card">
           <h4>Remarks</h4>
-          <p>{warehouse.remarks}</p>
+          <p>{warehouse.remarks || "No remarks available"}</p>
         </div>
 
         {/* ACTIONS */}
@@ -130,15 +197,12 @@ export default function WarehouseDetail() {
             className="secondary"
             onClick={() => navigate("/warehouse")}
           >
-            Back
+            Back to List
           </button>
 
           <button
-            onClick={() =>
-              navigate(`/warehouse/edit/${warehouse.code}`, {
-                state: warehouse,
-              })
-            }
+            className="primary"
+            onClick={() => navigate(`/warehouse/edit/${warehouse.id}`)}
           >
             Edit Warehouse
           </button>
