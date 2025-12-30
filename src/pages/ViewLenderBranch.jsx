@@ -1,65 +1,158 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { getLenderBranchById } from "../api/lenderBranchApi";
 import LenderPageHeader from "../components/LenderPageHeader";
 import "./EditLender.css";
 
-/* =====================
-   FULL DUMMY BRANCH DATA
-   ===================== */
-const DUMMY_BRANCH = {
-  lenderId: "lnd-1",
-  lenderName: "HDFC Bank",
-  branchCode: "BR-001",
-  branchName: "Kolkata Branch",
-  branchType: "PUBLIC",
-  contactPersonName: "Ramesh Kumar",
-  contactMobile: "9876543210",
-  contactEmail: "kolkata.branch@hdfc.com",
-  address: "Salt Lake Sector V, Kolkata",
-  state: "West Bengal",
-  district: "Kolkata",
-  pincode: "700091",
-  latitude: "22.5726",
-  longitude: "88.3639",
-  locationUpdatedAt: "2025-12-29T10:30",
-  billingApplicable: true,
-  status: "ACTIVE",
-  remarks: "Main operational branch for eastern region",
-  createdAt: "2025-12-01T09:00",
-  updatedAt: "2025-12-29T12:15",
+/**
+ * Format date for display
+ */
+const formatDate = (isoDateString) => {
+  if (!isoDateString) return "N/A";
+  try {
+    const date = new Date(isoDateString);
+    if (isNaN(date.getTime())) return "N/A";
+    
+    return date.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  } catch (error) {
+    return "N/A";
+  }
+};
+
+/**
+ * Format datetime for display
+ */
+const formatDateTime = (isoDateString) => {
+  if (!isoDateString) return "N/A";
+  try {
+    const date = new Date(isoDateString);
+    if (isNaN(date.getTime())) return "N/A";
+    
+    return date.toLocaleString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  } catch (error) {
+    return "N/A";
+  }
 };
 
 export default function ViewLenderBranch() {
   const navigate = useNavigate();
-  const { state } = useLocation();
+  const { id } = useParams();
+
+  const [branch, setBranch] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   /* =====================
-     SAFE DATA MERGE
+     FETCH BRANCH DATA
      ===================== */
-  const branch = {
-    ...DUMMY_BRANCH,
-    ...(state || {}),
-  };
+  useEffect(() => {
+    const fetchBranch = async () => {
+      console.log("Fetching lender branch with ID:", id);
+      setLoading(true);
+      setError(null);
+
+      try {
+        const result = await getLenderBranchById(id);
+        console.log("getLenderBranchById Result:", result);
+
+        if (result.success && result.data) {
+          setBranch(result.data);
+        } else {
+          const errorMsg = result.error || "Failed to fetch lender branch data";
+          setError(errorMsg);
+          alert(`Error: ${errorMsg}`);
+        }
+      } catch (err) {
+        console.error("Exception in fetchBranch:", err);
+        setError("An unexpected error occurred while fetching data");
+        alert("An unexpected error occurred while fetching data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchBranch();
+    } else {
+      setLoading(false);
+      setError("No lender branch ID provided");
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="lender-form-page">
+        <LenderPageHeader
+          title="Lender Branch"
+          breadcrumbLabel="Lender Branch > View"
+        />
+        <div className="edit-lender-page">
+          <div className="card edit-lender-card full-width">
+            <h2 className="edit-lender-title">Loading...</h2>
+            <div style={{ textAlign: "center", padding: "2rem" }}>
+              <div className="spinner"></div>
+              <p style={{ marginTop: "1rem", color: "#666" }}>Fetching lender branch data...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !branch) {
+    return (
+      <div className="lender-form-page">
+        <LenderPageHeader
+          title="Lender Branch"
+          breadcrumbLabel="Lender Branch > View"
+        />
+        <div className="edit-lender-page">
+          <div className="card edit-lender-card full-width">
+            <h2 className="edit-lender-title">Error</h2>
+            <p style={{ padding: "2rem", textAlign: "center", color: "#721c24" }}>
+              {error || "Lender branch not found"}
+            </p>
+            <div className="form-actions">
+              <button onClick={() => navigate("/lender-branches")}>
+                Back to List
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="lender-form-page">
-      {/* ✅ HEADER */}
       <LenderPageHeader
         title="Lender Branch"
         breadcrumbLabel="Lender Branch > View"
       />
 
-      {/* =====================
-         VIEW CARD
-         ===================== */}
       <div className="edit-lender-page">
         <div className="card edit-lender-card full-width">
-          <h2 className="edit-lender-title">Lender Branch Details</h2>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+            <h2 className="edit-lender-title" style={{ margin: 0 }}>Lender Branch Details</h2>
+            <div style={{ fontSize: "0.9rem", color: "#666", padding: "0.5rem 1rem", backgroundColor: "#f0f0f0", borderRadius: "4px" }}>
+              ID: <strong>{branch.id}</strong>
+            </div>
+          </div>
 
-          {/* ✅ TWO COLUMN READ-ONLY FORM */}
           <div className="edit-form two-column">
             <label>
-              Lender
-              <input value={branch.lenderName} disabled />
+              Lender ID
+              <input value={branch.lenderId || "N/A"} disabled />
             </label>
 
             <label>
@@ -114,23 +207,19 @@ export default function ViewLenderBranch() {
 
             <label>
               Latitude
-              <input value={branch.latitude} disabled />
+              <input value={branch.latitude || 0} disabled />
             </label>
 
             <label>
               Longitude
-              <input value={branch.longitude} disabled />
+              <input value={branch.longitude || 0} disabled />
             </label>
 
             <label>
               Location Updated At
-              <input
-                value={branch.locationUpdatedAt.replace("T", " ")}
-                disabled
-              />
+              <input value={formatDate(branch.locationUpdatedAt)} disabled />
             </label>
 
-            {/* ✅ INLINE BOOLEAN FIELD */}
             <div className="ld-inline-field">
               <span className="ld-inline-label">Billing Applicable</span>
               <input type="checkbox" checked={branch.billingApplicable} disabled />
@@ -143,23 +232,31 @@ export default function ViewLenderBranch() {
 
             <label className="full-width">
               Remarks
-              <input value={branch.remarks} disabled />
+              <textarea value={branch.remarks || "No remarks available"} disabled rows="3" />
             </label>
 
             <label>
               Created At
-              <input value={branch.createdAt.replace("T", " ")} disabled />
+              <input value={formatDateTime(branch.createdAt)} disabled />
             </label>
 
             <label>
               Updated At
-              <input value={branch.updatedAt.replace("T", " ")} disabled />
+              <input value={formatDateTime(branch.updatedAt)} disabled />
             </label>
 
-            {/* ✅ ACTIONS */}
+            {/* ACTIONS */}
             <div className="form-actions">
               <button type="button" onClick={() => navigate("/lender-branches")}>
-                Back
+                Back to List
+              </button>
+
+              <button 
+                type="button" 
+                className="primary"
+                onClick={() => navigate(`/lender-branches/edit/${branch.id}`)}
+              >
+                Edit Branch
               </button>
             </div>
           </div>
