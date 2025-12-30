@@ -9,7 +9,8 @@ thead {
   background: var(--bg-muted);
 }
 
-th, td {
+th,
+td {
   padding: 12px;
   border-bottom: 1px solid var(--border-color);
 }

@@ -36,7 +36,8 @@
 
 /* Dark mode search */
 body[data-theme="dark"] .lender-search input {
-  background: #f3f4f6; /* grayish */
+  background: #f3f4f6;
+  /* grayish */
   color: #020617;
   border-color: #334155;
 }
