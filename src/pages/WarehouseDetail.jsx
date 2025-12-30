@@ -29,10 +29,10 @@ export default function WarehouseDetail() {
     pincodes: Array.isArray(state?.pincodes)
       ? state.pincodes
       : [
-          { id: 1, pincode: "382470" },
-          { id: 2, pincode: "382475" },
-          { id: 3, pincode: "380005" },
-        ],
+        { id: 1, pincode: "382470" },
+        { id: 2, pincode: "382475" },
+        { id: 3, pincode: "380005" },
+      ],
   };
 
   /* =========================

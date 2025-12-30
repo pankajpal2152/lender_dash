@@ -1,7 +1,7 @@
 .warehouse-detail-container {
   max-width: 100%;
   margin-bottom: auto;
-  margin-top:35px;
+  margin-top: 35px;
   margin-left: 100px;
   margin-right: 100px;
 }
@@ -51,8 +51,8 @@
   width: 50%;
   border-collapse: collapse;
   text-align: center;
-  border: black,20px;
-  
+  border: black, 20px;
+
 }
 
 .actions {

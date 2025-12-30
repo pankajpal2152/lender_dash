@@ -81,6 +81,7 @@ body[data-theme="dark"] .warehouse-container h2 {
   color: #ffffff;
   /* ✅ Create Warehouse title */
 }
+
 /* Two column form */
 .two-column {
   grid-template-columns: repeat(2, 1fr);
@@ -103,7 +104,8 @@ body[data-theme="dark"] .warehouse-container h2 {
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 12px;               /* 👈 ensures buttons don't overlap */
+  gap: 12px;
+  /* 👈 ensures buttons don't overlap */
   margin-top: 24px;
 }
 
@@ -118,4 +120,3 @@ body[data-theme="dark"] .actions .secondary {
   background: #1f2937;
   color: #f9fafb;
 }
-
